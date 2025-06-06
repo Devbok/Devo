@@ -22,8 +22,9 @@ YT_API_KEY = getenv("YT_API_KEY" , None ) ## get your secret key from Mr cute x 
 
 DURATION_LIMIT_MIN = int(getenv("DURATION_LIMIT", 600))
 
-API_URL = getenv("API_URL", 'https://api.thequickearn.xyz')
-API_KEY = getenv("API_KEY", None)
+API_URL = getenv("API_URL", 'https://api.thequickearn.xyz') #youtube song url
+API_KEY = getenv("API_KEY", None) # youtube song api key, generate free key or buy paid plan from panel.thequickearn.xyz
+
 
 # Set this to true if you want post ads automatically
 ADS_MODE = getenv("ADS_MODE", None)
