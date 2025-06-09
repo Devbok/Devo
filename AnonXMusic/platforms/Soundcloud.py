@@ -1,31 +1,30 @@
+import asyncio
 from os import path
 
 from yt_dlp import YoutubeDL
 
 from AnonXMusic.utils.formatters import seconds_to_min
 
-
 class SoundAPI:
     def __init__(self):
         self.opts = {
             "outtmpl": "downloads/%(id)s.%(ext)s",
-            "format": "best",
+            "format": "bestaudio[ext=m4a]/bestaudio/best",
             "retries": 3,
             "nooverwrites": False,
             "continuedl": True,
+            "quiet": True,
         }
 
     async def valid(self, link: str):
-        if "soundcloud" in link:
-            return True
-        else:
-            return False
+        return "soundcloud" in link and "sets" not in link
 
     async def download(self, url):
         d = YoutubeDL(self.opts)
         try:
-            info = d.extract_info(url)
-        except:
+            info = await asyncio.to_thread(d.extract_info, url)
+        except Exception as e:
+            print(f"Error: {e}")
             return False
         xyz = path.join("downloads", f"{info['id']}.{info['ext']}")
         duration_min = seconds_to_min(info["duration"])
