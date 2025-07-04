@@ -22,7 +22,7 @@ from AnonXMusic.utils.database import (
     is_maintenance,
 )
 from AnonXMusic.utils.inline import botplaylist_markup
-from config import PLAYLIST_IMG_URL, SUPPORT_GROUP, adminlist
+from config import PLAYLIST_IMG_URL, SUPPORT_CHAT, adminlist
 from strings import get_string
 
 links = {}
