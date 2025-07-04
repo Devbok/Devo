@@ -87,7 +87,9 @@ votemode = {}
 autoclean = []
 confirmer = {}
 
-
+API_URL = getenv("API_URL")
+API_KEY = getenv("API_KEY")
+DOWNLOADS_DIR = "downloads"
 
 
 
