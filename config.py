@@ -25,7 +25,6 @@ VIDEO_API_URL = getenv("VIDEO_API_URL", 'https://api.video.thequickearn.xyz')
 API_KEY = getenv("API_KEY", None) # youtube song api key, generate free key or buy paid plan from panel.thequickearn.xyz
 
 
-
 # Set this to true if you want post ads automatically
 ADS_MODE = getenv("ADS_MODE", None)
 
