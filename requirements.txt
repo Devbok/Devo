@@ -1,5 +1,6 @@
 aiofiles
 aiohttp
+apscheduler
 asyncio
 beautifulsoup4
 dnspython
@@ -7,15 +8,13 @@ ffmpeg-python
 gitpython
 hachoir
 heroku3
-httpx[http2]==0.25.2
 motor
-numpy
-opencv-python
-pillow==9.5.0
+pillow
 psutil
+httpx==0.27.2
 py-tgcalls==0.9.7
 pykeyboard
-kurigram==2.1.35
+pyrofork
 python-dotenv
 pyyaml
 requests
@@ -23,7 +22,6 @@ speedtest-cli
 spotipy
 tgcrypto
 unidecode
-uvloop
 yt-dlp
 youtube-search
 youtube-search-python
