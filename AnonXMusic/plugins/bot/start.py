@@ -115,15 +115,27 @@ async def welcome(client, message: Message):
         try:
             language = await get_lang(message.chat.id)
             _ = get_string(language)
+
+            
             if await is_banned_user(member.id):
                 try:
                     await message.chat.ban_member(member.id)
                 except:
                     pass
+
+
             if member.id == app.id:
+
+                if message.from_user and message.from_user.id in BANNED_USERS:
+                    await message.reply_text(
+                        f"⚠️ This bot was added by a banned user ({message.from_user.mention}). Leaving group..."
+                    )
+                    return await app.leave_chat(message.chat.id)
+
                 if message.chat.type != ChatType.SUPERGROUP:
                     await message.reply_text(_["start_4"])
                     return await app.leave_chat(message.chat.id)
+
                 if message.chat.id in await blacklisted_chats():
                     await message.reply_text(
                         _["start_5"].format(
@@ -135,6 +147,7 @@ async def welcome(client, message: Message):
                     )
                     return await app.leave_chat(message.chat.id)
 
+                
                 out = start_panel(_)
                 await message.reply_photo(
                     photo=config.START_IMG_URL,
@@ -148,5 +161,6 @@ async def welcome(client, message: Message):
                 )
                 await add_served_chat(message.chat.id)
                 await message.stop_propagation()
+
         except Exception as ex:
             print(ex)
