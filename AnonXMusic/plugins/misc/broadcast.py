@@ -54,7 +54,7 @@ async def braodcast_message(client, message, _):
                     else:
                         await app.send_message(chat_id=i, text=text_content, reply_markup=reply_markup)
                     sent_chats += 1
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.1)
                 except FloodWait as fw:
                     await asyncio.sleep(fw.x)
                 except:
@@ -72,7 +72,7 @@ async def braodcast_message(client, message, _):
                     else:
                         await app.send_message(chat_id=i, text=text_content, reply_markup=reply_markup)
                     sent_users += 1
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.1)
                 except FloodWait as fw:
                     await asyncio.sleep(fw.x)
                 except:
@@ -162,7 +162,7 @@ async def braodcast_message(client, message, _):
                     else await app.send_message(i, text=query)
                 )
                 susr += 1
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.1))
             except FloodWait as fw:
                 flood_time = int(fw.value)
                 if flood_time > 200:
