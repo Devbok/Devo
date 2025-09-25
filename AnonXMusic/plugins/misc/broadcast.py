@@ -24,9 +24,70 @@ IS_BROADCASTING = False
 @language
 async def braodcast_message(client, message, _):
     global IS_BROADCASTING
+
+    if "-wfchat" in message.text or "-wfuser" in message.text:
+        if not message.reply_to_message or not (message.reply_to_message.photo or message.reply_to_message.text):
+            return await message.reply_text("Please reply to a text or image message for broadcasting.")
+
+        # Extract data from the replied message
+        if message.reply_to_message.photo:
+            content_type = 'photo'
+            file_id = message.reply_to_message.photo.file_id
+        else:
+            content_type = 'text'
+            text_content = message.reply_to_message.text
+            
+        caption = message.reply_to_message.caption
+        reply_markup = message.reply_to_message.reply_markup if hasattr(message.reply_to_message, 'reply_markup') else None
+
+        IS_BROADCASTING = True
+        await message.reply_text(_["broad_1"])
+
+        if "-wfchat" in message.text or "-wfuser" in message.text:
+            # Broadcasting to chats
+            sent_chats = 0
+            chats = [int(chat["chat_id"]) for chat in await get_served_chats()]
+            for i in chats:
+                try:
+                    if content_type == 'photo':
+                        await app.send_photo(chat_id=i, photo=file_id, caption=caption, reply_markup=reply_markup)
+                    else:
+                        await app.send_message(chat_id=i, text=text_content, reply_markup=reply_markup)
+                    sent_chats += 1
+                    await asyncio.sleep(0.2)
+                except FloodWait as fw:
+                    await asyncio.sleep(fw.x)
+                except:
+                    continue
+            await message.reply_text(f"Broadcast to chats completed! Sent to {sent_chats} chats.")
+
+        if "-wfuser" in message.text:
+            # Broadcasting to users
+            sent_users = 0
+            users = [int(user["user_id"]) for user in await get_served_users()]
+            for i in users:
+                try:
+                    if content_type == 'photo':
+                        await app.send_photo(chat_id=i, photo=file_id, caption=caption, reply_markup=reply_markup)
+                    else:
+                        await app.send_message(chat_id=i, text=text_content, reply_markup=reply_markup)
+                    sent_users += 1
+                    await asyncio.sleep(0.2)
+                except FloodWait as fw:
+                    await asyncio.sleep(fw.x)
+                except:
+                    continue
+            await message.reply_text(f"Broadcast to users completed! Sent to {sent_users} users.")
+
+        IS_BROADCASTING = False
+        return
+
+    
     if message.reply_to_message:
         x = message.reply_to_message.id
         y = message.chat.id
+        reply_markup = message.reply_to_message.reply_markup if message.reply_to_message.reply_markup else None
+        content = None
     else:
         if len(message.command) < 2:
             return await message.reply_text(_["broad_2"])
@@ -41,8 +102,6 @@ async def braodcast_message(client, message, _):
             query = query.replace("-assistant", "")
         if "-user" in query:
             query = query.replace("-user", "")
-        if "-noforward" in query:
-            query = query.replace("-noforward", "")
         if query == "":
             return await message.reply_text(_["broad_8"])
 
@@ -58,62 +117,37 @@ async def braodcast_message(client, message, _):
             chats.append(int(chat["chat_id"]))
         for i in chats:
             try:
-                if "-noforward" in message.text and message.reply_to_message:
-                    m = await app.copy_message(
-                        chat_id=i,
-                        from_chat_id=y,
-                        message_id=x,
-                        reply_markup=message.reply_to_message.reply_markup,
-                    )
-                    if "-pin" in message.text:
-                        try:
-                            await m.pin(disable_notification=True)
-                            pin += 1
-                        except:
-                            continue
-                    elif "-pinloud" in message.text:
-                        try:
-                            await m.pin(disable_notification=False)
-                            pin += 1
-                        except:
-                            continue
-                    sent += 1
-                    await asyncio.sleep(0.1)
-                else:
-                    m = (
-                        await app.forward_messages(i, y, x)
-                        if message.reply_to_message
-                        else await app.send_message(i, text=query)
-                    )
-                    if "-pin" in message.text:
-                        try:
-                            await m.pin(disable_notification=True)
-                            pin += 1
-                        except:
-                            continue
-                    elif "-pinloud" in message.text:
-                        try:
-                            await m.pin(disable_notification=False)
-                            pin += 1
-                        except:
-                            continue
-                    sent += 1
-                    await asyncio.sleep(0.1)
-            except FloodWait as e:
-                flood_time = int(e.value)
+                m = (
+                    await app.copy_message(chat_id=i, from_chat_id=y, message_id=x, reply_markup=reply_markup)
+                    if message.reply_to_message
+                    else await app.send_message(i, text=query)
+                )
+                if "-pin" in message.text:
+                    try:
+                        await m.pin(disable_notification=True)
+                        pin += 1
+                    except:
+                        continue
+                elif "-pinloud" in message.text:
+                    try:
+                        await m.pin(disable_notification=False)
+                        pin += 1
+                    except:
+                        continue
+                sent += 1
+                await asyncio.sleep(0.2)
+            except FloodWait as fw:
+                flood_time = int(fw.value)
                 if flood_time > 200:
                     continue
                 await asyncio.sleep(flood_time)
             except:
                 continue
         try:
-            await message.reply_text(
-                f"» ʙʀᴏᴀᴅᴄᴀsᴛᴇᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {sent} ᴄʜᴀᴛs ᴡɪᴛʜ {pin} ᴘɪɴs ғʀᴏᴍ ᴛʜᴇ ʙᴏᴛ."
-            )
+            await message.reply_text(_["broad_3"].format(sent, pin))
         except:
             pass
 
-# Bot broadcasting to users
     if "-user" in message.text:
         susr = 0
         served_users = []
@@ -122,32 +156,22 @@ async def braodcast_message(client, message, _):
             served_users.append(int(user["user_id"]))
         for i in served_users:
             try:
-                if "-noforward" in message.text and message.reply_to_message:
-                    await app.copy_message(
-                        chat_id=i,
-                        from_chat_id=y,
-                        message_id=x,
-                        reply_markup=message.reply_to_message.reply_markup,
-                    )
-                    susr += 1
-                    await asyncio.sleep(0.1)
-                else:
-                    m = (
-                        await app.forward_messages(i, y, x)
-                        if message.reply_to_message
-                        else await app.send_message(i, text=query)
-                    )
-                    susr += 1
-                    await asyncio.sleep(0.1)
-            except FloodWait as e:
-                flood_time = int(e.value)
+                m = (
+                    await app.copy_message(chat_id=i, from_chat_id=y, message_id=x, reply_markup=reply_markup)
+                    if message.reply_to_message
+                    else await app.send_message(i, text=query)
+                )
+                susr += 1
+                await asyncio.sleep(0.2)
+            except FloodWait as fw:
+                flood_time = int(fw.value)
                 if flood_time > 200:
                     continue
                 await asyncio.sleep(flood_time)
             except:
-                continue
+                pass
         try:
-            await message.reply_text(f"» ʙʀᴏᴀᴅᴄᴀsᴛᴇᴅ ᴍᴇssᴀɢᴇ ᴛᴏ {susr} ᴜsᴇʀs.")
+            await message.reply_text(_["broad_4"].format(susr))
         except:
             pass
 
