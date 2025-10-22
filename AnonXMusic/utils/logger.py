@@ -8,7 +8,7 @@ from pyrogram.types import Message
 from AnonXMusic import app, Userbot
 from AnonXMusic.utils.database import get_assistant
 from pyrogram.errors import UserAlreadyParticipant, UserNotParticipant, ChatAdminRequired
-from pyrogram.types import Message, ChatPrivileges
+from pyrogram.types import Message
 import asyncio
 from typing import Optional
 from random import randint
