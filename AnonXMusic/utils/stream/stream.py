@@ -25,7 +25,7 @@ async def stream(
     streamtype: Union[bool, str] = None,
     spotify: Union[bool, str] = None,
     forceplay: Union[bool, str] = None,
-    thumb=None, # <--- Naya parameter hamare thumbnail ke liye
+    thumb=None,
 ):
     if not result:
         return
@@ -64,8 +64,8 @@ async def stream(
                 await Anony.join_call(chat_id, original_chat_id, file_path, video=status, image=thumbnail)
                 await put_queue(chat_id, original_chat_id, file_path if direct else f"vid_{vidid}", title, duration_min, user_name, vidid, user_id, "video" if video else "audio", forceplay=forceplay)
                 
-                # FIX: Hamara naya thumb use karein
-                img = thumb if thumb else await get_thumb(vidid)
+                # FIX: Naya logic yahan hai (Passing user_id for DP)
+                img = thumb if thumb else await get_thumb(vidid, user_id)
                 button = stream_markup(_, chat_id)
                 run = await app.send_photo(
                     original_chat_id,
@@ -76,7 +76,6 @@ async def stream(
                 db[chat_id][0]["mystic"] = run
                 db[chat_id][0]["markup"] = "stream"
         
-        # Carbon/Playlist summary logic remains same
         if count == 0: return
         link = await AnonyBin(msg)
         car = msg if msg.count("\n") < 17 else os.linesep.join(msg.split(os.linesep)[:17])
@@ -107,8 +106,8 @@ async def stream(
             await Anony.join_call(chat_id, original_chat_id, file_path, video=status, image=thumbnail)
             await put_queue(chat_id, original_chat_id, file_path if direct else f"vid_{vidid}", title, duration_min, user_name, vidid, user_id, "video" if video else "audio", forceplay=forceplay)
             
-            # FIX: Sabse zaruri badlav yahan hai
-            img = thumb if thumb else await get_thumb(vidid)
+            # FIX: Sabse zaruri badlav (Added user_id to get_thumb)
+            img = thumb if thumb else await get_thumb(vidid, user_id)
             button = stream_markup(_, chat_id)
             run = await app.send_photo(
                 original_chat_id,
@@ -118,7 +117,4 @@ async def stream(
             )
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "stream"
-
-    # SoundCloud, Telegram, Live sections follow similar fallback logic...
-    # (Baki ka code SoundCloud aur Telegram ke liye same hai, bas images wahan config se aati hain)
-
+            
