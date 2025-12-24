@@ -25,3 +25,5 @@ unidecode
 yt-dlp
 youtube-search
 youtube-search-python
+Pillow==10.2.0
+
