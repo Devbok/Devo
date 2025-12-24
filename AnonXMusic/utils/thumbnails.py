@@ -3,88 +3,23 @@ import re
 import random
 import aiofiles
 import aiohttp
-import random
-import requests
-import os
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps, ImageDraw, ImageFont
-from unidecode import unidecode
+from PIL import Image, ImageFilter, ImageDraw, ImageFont, ImageOps
 from youtubesearchpython.__future__ import VideosSearch
 from AnonXMusic import app
 from config import YOUTUBE_IMG_URL
 
-def changeImageSize(maxWidth, maxHeight, image):
-    widthRatio = maxWidth / image.size[0]
-    heightRatio = maxHeight / image.size[1]
-    newWidth = int(widthRatio * image.size[0])
-    newHeight = int(heightRatio * image.size[1])
-    newImage = image.resize((newWidth, newHeight))
-    return newImage
-
-def clear(text):
-    list = text.split(" ")
-    title = ""
-    for i in list:
-        if len(title) + len(i) < 60:
-            title += " " + i
-    return title.strip()
-
-def random_color():
-    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-
-
-def predefined_color():
-    colors = [
-        (255, 0, 0),
-        (255, 255, 255),
-        (0, 0, 255),
-        (255, 255, 0),
-        (0, 255, 0),
-        (255, 105, 180),
-        (128, 0, 128)
-    ]
-    return random.choice(colors)
-
-def truncate(text):
-    list = text.split(" ")
-    text1, text2 = "", ""
-    for i in list:
-        if len(text1) + len(i) < 30:        
-            text1 += " " + i
-        elif len(text2) + len(i) < 30:       
-            text2 += " " + i
-    return [text1.strip(), text2.strip()]
-
-async def get_thumb(videoid: str):
-    if os.path.isfile(f"cache/{videoid}.png"):
-        return f"cache/{videoid}.png"
+async def get_thumb(videoid: str, user_id=None, client=None):
+    if os.path.isfile(f"cache/{videoid}_{user_id}.png"):
+        return f"cache/{videoid}_{user_id}.png"
 
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
         results = VideosSearch(url, limit=1)
         for result in (await results.next())["result"]:
-            try:
-                title = result["title"]
-                title = re.sub("\W+", " ", title)
-                title = title.title()
-            except:
-                title = "Unsupported Title"
-            try:
-                duration = result["duration"]
-            except:
-                duration = "Unknown Mins"
+            title = re.sub("\W+", " ", result["title"]).title()
+            duration = result.get("duration", "Unknown")
             thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-            try:
-                views = result["viewCount"]["short"]
-            except:
-                views = "Unknown Views"
-            try:
-                channel = result["channel"]["name"]
-            except:
-                channel = "Unknown Channel"
-            try:
-                upload_date = result["publishedTime"]
-            except:
-                upload_date = "Unknown Date"
+            channel = result["channel"]["name"]
 
         async with aiohttp.ClientSession() as session:
             async with session.get(thumbnail) as resp:
@@ -94,52 +29,55 @@ async def get_thumb(videoid: str):
                     await f.close()
 
         youtube = Image.open(f"cache/thumb{videoid}.png")
-        blurred_thumbnail = youtube.filter(ImageFilter.GaussianBlur(7))
-        icon_path = "AnonXMusic/AM/tt.png"
-        icon = Image.open(icon_path)
-        icon_size = (850, 800)
-        icon = icon.resize(icon_size)
-        thumbnail_width, thumbnail_height = blurred_thumbnail.size
-        icon_width, icon_height = icon.size
-        offset_left = 0
-        offset_right = 0
-        offset_up = 0
-        offset_down = 0
+        blurred_thumbnail = youtube.filter(ImageFilter.GaussianBlur(10)).resize((1280, 720))
         
-        icon_position = (
-        (thumbnail_width - icon_width) // 2 + offset_right - offset_left,
-        (thumbnail_height - icon_height) // 2 + offset_down - offset_up
-    )
-        blurred_thumbnail.paste(icon, icon_position, icon.convert('RGBA').split()[3])
-        original_thumbnail = youtube.resize((215, 170))
-        original_with_border = Image.new("RGBA", original_thumbnail.size, (0, 0, 0, 0))
-        original_with_border.paste(original_thumbnail, (0, 0), original_thumbnail.convert('RGBA').split()[3])
-        original_offset_left = 165
-        original_offset_right = 0
-        original_offset_up = 100
-        original_offset_down = 0
+        # --- LEFT SIDE: USER DP CIRCLE ---
+        if user_id and client:
+            try:
+                user_photo = await client.download_media(user_id, file_name=f"cache/u_{user_id}.jpg")
+                pfp = Image.open(user_photo).convert("RGBA").resize((300, 300))
+            except:
+                pfp = youtube.convert("RGBA").resize((300, 300))
+        else:
+            pfp = youtube.convert("RGBA").resize((300, 300))
 
-        original_position = (
-        (thumbnail_width - original_with_border.width) // 2 + original_offset_right - original_offset_left, 
-        (thumbnail_height - original_with_border.height) // 2 + original_offset_down - original_offset_up
-    )
-        blurred_thumbnail.paste(original_with_border, original_position)
-        try:
-            font = ImageFont.truetype("AnonXMusic/AM/f.ttf", 20)
-        except IOError:
-            font = ImageFont.load_default()
+        mask = Image.new("L", (300, 300), 0)
+        draw_mask = ImageDraw.Draw(mask)
+        draw_mask.ellipse((0, 0, 300, 300), fill=255)
+        
+        # User Photo Paste
+        blurred_thumbnail.paste(pfp, (150, 150), mask)
+        
+        # Neon Border for User DP
         draw = ImageDraw.Draw(blurred_thumbnail)
-        title_words = title.split()[:6] 
-        truncated_title = ' '.join(title_words)
-        draw.text((600, 190), f"{app.me.first_name}", font=font, fill=predefined_color())
-        draw.text((600, 220), f"{truncated_title}", font=font, fill=(255, 255,255))
-        draw.text((600, 260), f"{channel}", font=font, fill=(255, 255,255))
+        draw.ellipse([150, 150, 450, 450], outline=(0, 255, 255), width=10)
+        
+        # Listening Now Text
+        try:
+            font_small = ImageFont.truetype("AnonXMusic/AM/f.ttf", 35)
+        except:
+            font_small = ImageFont.load_default()
+        draw.text((180, 480), "Listening Now...", font=font_small, fill=(255, 255, 255))
+
+        # --- RIGHT SIDE: SONG CARD ---
+        original_thumbnail = youtube.resize((450, 350))
+        # Card Position (Shifted to Right)
+        blurred_thumbnail.paste(original_thumbnail, (700, 150))
+        
+        # Song Info Text
+        draw.text((700, 520), f"Title: {title[:25]}...", font=font_small, fill=(0, 255, 255))
+        draw.text((700, 570), f"Channel: {channel}", font=font_small, fill=(255, 255, 255))
+
         try:
             os.remove(f"cache/thumb{videoid}.png")
         except:
             pass
-        blurred_thumbnail.save(f"cache/{videoid}.png")
-        return f"cache/{videoid}.png"
+            
+        final_path = f"cache/{videoid}_{user_id}.png"
+        blurred_thumbnail.save(final_path)
+        return final_path
+        
     except Exception as e:
-        print(e)
+        print(f"Thumb Error: {e}")
         return YOUTUBE_IMG_URL
+        
