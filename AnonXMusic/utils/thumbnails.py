@@ -38,7 +38,7 @@ async def get_thumb(videoid: str, user_id: int, user_name: str):
         # 2. Dark Premium Background
         youtube = Image.open(temp_path).convert("RGBA")
         # Background ko thoda dark rakhenge jaisa 2150 mein hai
-        bg = youtube.resize((1280, 720)).filter(ImageFilter.GaussianBlur(60))
+        bg = youtube.resize((1280, 720)).filter(ImageFilter.GaussianBlur(25))
         enhancer = Image.new("RGBA", bg.size, (0, 0, 0, 100)) # Dark layer
         bg = Image.alpha_composite(bg, enhancer)
         draw = ImageDraw.Draw(bg)
@@ -68,7 +68,7 @@ async def get_thumb(videoid: str, user_id: int, user_name: str):
         # 6. Playback Icons (Line ke niche)
         if os.path.exists(icons_path):
             icons = Image.open(icons_path).convert("RGBA").resize((210, 45))
-            bg.paste(icons, (610, 390), icons)
+            bg.paste(icons, (650, 405), icons)
 
         # 7. Professional Text Styling
         try:
