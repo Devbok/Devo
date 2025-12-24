@@ -1,6 +1,7 @@
 import os
 import re
 import random
+import asyncio
 import aiofiles
 import aiohttp
 from PIL import Image, ImageFilter, ImageDraw, ImageFont, ImageOps
@@ -10,107 +11,108 @@ from config import YOUTUBE_IMG_URL
 
 async def get_thumb(videoid: str, user_id=None, client=None):
     final_path = f"cache/{videoid}_{user_id}.png"
+    temp_thumb = f"cache/thumb{videoid}.png"
     
-    # --- FIXED: FORCE REFRESH ---
-    # Purana file delete karna taaki naya design (2114.jpg) apply ho sake
+    # 1. Force Clean-up for Instant Update
     if os.path.isfile(final_path):
         os.remove(final_path)
 
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
         results = VideosSearch(url, limit=1)
-        for result in (await results.next())["result"]:
-            title = re.sub("\W+", " ", result["title"]).title()
-            duration = result.get("duration", "Unknown")
-            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-            channel = result["channel"]["name"]
+        res = await results.next()
+        result = res["result"][0]
+        
+        # CLEAN UI: Hashtags aur special symbols ko filter kiya
+        raw_title = result["title"]
+        title = re.sub(r'[#@*]', '', raw_title).strip() 
+        thumbnail = result["thumbnails"][0]["url"].split("?")[0]
+        channel = result["channel"]["name"]
 
+        # 2. Fast & Robust Download (Black Screen Fix)
         async with aiohttp.ClientSession() as session:
             async with session.get(thumbnail) as resp:
                 if resp.status == 200:
-                    f = await aiofiles.open(f"cache/thumb{videoid}.png", mode="wb")
+                    f = await aiofiles.open(temp_thumb, mode="wb")
                     await f.write(await resp.read())
                     await f.close()
 
-        # --- PREMIUM BACKGROUND ---
-        # Dark Charcoal Gradient look
-        base_img = Image.new("RGB", (1280, 720), (15, 15, 25))
-        draw = ImageDraw.Draw(base_img)
-        
-        youtube = Image.open(f"cache/thumb{videoid}.png")
-        # Background mein halka sa blur reflection
-        bg_blur = youtube.filter(ImageFilter.GaussianBlur(40)).resize((1280, 720))
-        base_img = Image.blend(base_img, bg_blur, alpha=0.4)
+        # 3. Premium Background Engine (2117.jpg Gradient style)
+        base_img = Image.new("RGB", (1280, 720), (10, 15, 22))
+        youtube = Image.open(temp_thumb)
+        bg_blur = youtube.filter(ImageFilter.GaussianBlur(55)).resize((1280, 720))
+        base_img = Image.blend(base_img, bg_blur, alpha=0.45) # Deep Glow
         draw = ImageDraw.Draw(base_img)
 
-        # Fonts
+        # Fonts Setup
         try:
-            font_title = ImageFont.truetype("AnonXMusic/AM/f.ttf", 45)
-            font_small = ImageFont.truetype("AnonXMusic/AM/f.ttf", 32)
+            font_title = ImageFont.truetype("AnonXMusic/AM/f.ttf", 48)
+            font_small = ImageFont.truetype("AnonXMusic/AM/f.ttf", 33)
         except:
             font_title = ImageFont.load_default()
             font_small = ImageFont.load_default()
 
-        # --- LEFT SIDE: GOL DP (USER ID FIX) ---
-        pfp_size = (350, 350)
-        if user_id and client:
+        # 4. Profile Photo Engine (Automatic Fetch)
+        pfp_size = (370, 370)
+        pfp_found = False
+        if user_id:
             try:
-                # Direct user fetch for photo (username ignore)
-                user = await client.get_users(user_id)
-                if user.photo:
-                    user_photo = await client.download_media(user.photo.big_file_id, file_name=f"cache/u_{user_id}.jpg")
-                    pfp = Image.open(user_photo).convert("RGBA").resize(pfp_size)
-                else:
-                    pfp = youtube.convert("RGBA").resize(pfp_size)
-            except:
-                pfp = youtube.convert("RGBA").resize(pfp_size)
-        else:
+                user_info = await app.get_users(user_id)
+                if user_info.photo:
+                    # Professional high-res download
+                    pfp_path = await app.download_media(user_info.photo.big_file_id, file_name=f"cache/u_{user_id}.jpg")
+                    pfp = Image.open(pfp_path).convert("RGBA").resize(pfp_size)
+                    pfp_found = True
+            except: pass
+
+        if not pfp_found:
             pfp = youtube.convert("RGBA").resize(pfp_size)
 
+        # Gol Masking
         mask = Image.new("L", pfp_size, 0)
         ImageDraw.Draw(mask).ellipse((0, 0, pfp_size[0], pfp_size[1]), fill=255)
-        base_img.paste(pfp, (140, 120), mask)
+        base_img.paste(pfp, (120, 105), mask)
         
-        # Neon Glow Circle
-        draw.ellipse([135, 115, 495, 475], outline=(0, 255, 255), width=10)
+        # Neon Cyan Outer Glow
+        draw.ellipse([115, 100, 495, 480], outline=(0, 255, 255), width=14)
 
-        # --- DYNAMIC BLACK BARS (ANIMATION FEEL) ---
-        for i in range(0, 15):
-            bar_x = 150 + (i * 25)
-            bar_h = random.randint(20, 90)
-            # Black bars on gradient bg
-            draw.rounded_rectangle([bar_x, 560 - bar_h, bar_x + 12, 560], radius=5, fill=(0, 0, 0))
+        # 5. Dynamic Visualizer (Black Bars)
+        for i in range(0, 18):
+            bar_x = 140 + (i * 24)
+            bar_h = random.randint(35, 110)
+            draw.rounded_rectangle([bar_x, 565 - bar_h, bar_x + 11, 565], radius=6, fill=(0, 0, 0))
         
-        draw.text((180, 580), "Listening Now...", font=font_small, fill=(200, 200, 200))
+        draw.text((185, 590), "Listening Now...", font=font_small, fill=(210, 210, 210))
 
-        # --- RIGHT SIDE: GOLAKAR (ROUNDED) SONG COVER ---
-        # Chaukor hatakar Rounded Rectangle kiya hai
-        song_thumb = youtube.convert("RGBA").resize((500, 280))
-        song_mask = Image.new("L", (500, 280), 0)
-        ImageDraw.Draw(song_mask).rounded_rectangle([0, 0, 500, 280], radius=35, fill=255)
-        base_img.paste(song_thumb, (650, 180), song_mask)
+        # 6. Right Side Rounded Card (Sleek Look)
+        song_thumb = youtube.convert("RGBA").resize((530, 300))
+        song_mask = Image.new("L", (530, 300), 0)
+        ImageDraw.Draw(song_mask).rounded_rectangle([0, 0, 530, 300], radius=45, fill=255)
+        base_img.paste(song_thumb, (645, 185), song_mask)
 
-        # "NOW PLAYING" with Small Neon Circle
-        draw.ellipse([650, 125, 675, 150], outline=(0, 255, 255), width=5)
-        draw.text((690, 115), "NOW PLAYING", font=font_title, fill=(0, 255, 255))
+        # NOW PLAYING Header with Glow Circle
+        draw.ellipse([645, 130, 672, 157], outline=(0, 255, 255), width=6)
+        draw.text((690, 120), "NOW PLAYING", font=font_title, fill=(0, 255, 255))
         
-        # Song Details
-        draw.text((650, 480), f"Track: {title[:22]}...", font=font_small, fill=(255, 255, 255))
-        draw.text((650, 530), f"Requested By: {user_id}", font=font_small, fill=(0, 255, 255))
-
-        # Progress Bar
-        draw.rounded_rectangle([140, 660, 1140, 672], radius=6, fill=(40, 40, 50))
-        draw.rounded_rectangle([140, 660, 700, 672], radius=6, fill=(0, 255, 255))
-
+        # Clean Track Info
+        draw.text((645, 500), f"Track: {title[:22]}...", font=font_small, fill=(255, 255, 255))
+        
+        # User Name Fetch logic (Clean)
         try:
-            os.remove(f"cache/thumb{videoid}.png")
+            req_name = user_info.first_name[:15] if user_id and user_info else "User"
+            draw.text((645, 550), f"Requested By: {req_name}", font=font_small, fill=(0, 255, 255))
         except:
-            pass
-            
+            draw.text((645, 550), "Requested By: Guest", font=font_small, fill=(0, 255, 255))
+
+        # Final Render
         base_img.save(final_path)
+        
+        if os.path.exists(temp_thumb):
+            os.remove(temp_thumb)
+            
         return final_path
         
     except Exception as e:
         print(f"Thumb Error: {e}")
         return YOUTUBE_IMG_URL
-            
+    
