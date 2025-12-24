@@ -26,7 +26,6 @@ from AnonXMusic.utils.logger import play_logs
 from AnonXMusic.utils.stream.stream import stream
 from config import BANNED_USERS, lyrical
 
-# --- PROFESSIONAL THUMBNAIL GENERATOR ---
 async def generate_dynamic_thumb(title, requester, user_id, thumb_url, client):
     width, height = 1280, 720
     img = Image.new('RGB', (width, height), color=(10, 10, 15))
@@ -34,16 +33,8 @@ async def generate_dynamic_thumb(title, requester, user_id, thumb_url, client):
     if not os.path.exists("cache"):
         os.makedirs("cache")
 
-    try:
-        # Background Setting
-        bg = Image.new('RGB', (width, height), color=(20, 20, 30))
-        img.paste(bg, (0, 0))
-    except:
-        pass
-
     draw = ImageDraw.Draw(img)
 
-    # User DP Logic
     try:
         user_photo = await client.download_media(user_id, file_name=f"cache/u_{user_id}.jpg")
         if user_photo:
@@ -56,15 +47,9 @@ async def generate_dynamic_thumb(title, requester, user_id, thumb_url, client):
     except:
         draw.ellipse([900, 160, 1180, 440], outline=(0, 255, 255), width=5)
 
-    # Text & Design
-    try:
-        font = ImageFont.load_default()
-    except:
-        font = None
-
-    draw.text((70, 180), "NOW PLAYING", fill=(0, 255, 255), font=font)
-    draw.text((70, 260), f"{title[:25]}...", fill=(255, 255, 255), font=font)
-    draw.text((70, 560), f"By: {requester}", fill=(200, 200, 200), font=font)
+    draw.text((70, 180), "NOW PLAYING", fill=(0, 255, 255))
+    draw.text((70, 260), f"{title[:25]}...", fill=(255, 255, 255))
+    draw.text((70, 560), f"By: {requester}", fill=(200, 200, 200))
     draw.rounded_rectangle([70, 610, 1210, 625], radius=10, fill=(40, 40, 40))
     draw.rounded_rectangle([70, 610, 550, 625], radius=10, fill=(0, 255, 255))
 
