@@ -67,7 +67,7 @@ async def get_thumb(videoid: str, user_id: int, user_name: str):
 
         # 6. Playback Icons (Line ke niche)
         if os.path.exists(icons_path):
-            icons = Image.open(icons_path).convert("RGBA").resize((280, 65))
+            icons = Image.open(icons_path).convert("RGBA").resize((210, 45))
             bg.paste(icons, (610, 390), icons)
 
         # 7. Professional Text Styling
