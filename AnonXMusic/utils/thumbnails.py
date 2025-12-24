@@ -38,7 +38,7 @@ async def get_thumb(videoid: str, user_id: int, user_name: str):
         # 2. Dark Premium Background
         youtube = Image.open(temp_path).convert("RGBA")
         # Background ko thoda dark rakhenge jaisa 2150 mein hai
-        bg = youtube.resize((1280, 720)).filter(ImageFilter.GaussianBlur(25))
+        bg = youtube.resize((1280, 720)).filter(ImageFilter.GaussianBlur(18))
         enhancer = Image.new("RGBA", bg.size, (0, 0, 0, 100)) # Dark layer
         bg = Image.alpha_composite(bg, enhancer)
         draw = ImageDraw.Draw(bg)
