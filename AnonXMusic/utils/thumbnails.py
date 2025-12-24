@@ -104,7 +104,7 @@ async def get_thumb(videoid: str, user_id: int, user_name: str):
             icons = Image.open(icons_path).convert("RGBA").resize((145, 30))
             r, g, b, a = icons.split(); a = a.point(lambda i: i * 0.8) # 80% Transparency
             icons = Image.merge('RGBA', (r, g, b, a))
-            bg.paste(icons, (655, 415), icons)
+            bg.paste(icons, (800, 850), icons)
 
         draw.text((610, 485), f"Requested By: {user_name}", font=f_small, fill="white")
 
