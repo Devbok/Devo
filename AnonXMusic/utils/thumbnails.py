@@ -65,7 +65,7 @@ async def get_thumb(videoid: str, user_id: int, user_name: str):
 
         # 2. DESIGN: Professional Background (Blur 25)
         youtube = Image.open(temp_path).convert("RGBA")
-        bg = youtube.resize((1280, 720)).filter(ImageFilter.GaussianBlur(25))
+        bg = youtube.resize((1280, 720)).filter(ImageFilter.GaussianBlur(17))
         enhancer = Image.new("RGBA", (1280, 720), (0, 0, 0, 160)) 
         bg = Image.alpha_composite(bg, enhancer)
         draw = ImageDraw.Draw(bg)
@@ -106,7 +106,7 @@ async def get_thumb(videoid: str, user_id: int, user_name: str):
             icons = Image.merge('RGBA', (r, g, b, a))
             bg.paste(icons, (655, 415), icons)
 
-        draw.text((610, 485), f"Requested By: {user_name}", font=f_small, fill="white")
+        draw.text((650, 490), f"Requested By: {user_name}", font=f_small, fill="white")
 
         bg.convert("RGB").save(final_path)
         if os.path.exists(temp_path): os.remove(temp_path)
