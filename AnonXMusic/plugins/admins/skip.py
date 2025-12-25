@@ -89,9 +89,12 @@ async def skip(cli, message: Message, _, chat_id):
                 return await Anony.stop_stream(chat_id)
             except:
                 return
+    
+    # Get details for the next track in queue
     queued = check[0]["file"]
     title = (check[0]["title"]).title()
     user = check[0]["by"]
+    user_id = check[0]["user_id"] # Added to fix thumbnail
     streamtype = check[0]["streamtype"]
     videoid = check[0]["vidid"]
     status = True if str(streamtype) == "video" else None
@@ -102,6 +105,7 @@ async def skip(cli, message: Message, _, chat_id):
         db[chat_id][0]["seconds"] = check[0]["old_second"]
         db[chat_id][0]["speed_path"] = None
         db[chat_id][0]["speed"] = 1.0
+        
     if "live_" in queued:
         n, link = await YouTube.video(videoid, True)
         if n == 0:
@@ -115,7 +119,8 @@ async def skip(cli, message: Message, _, chat_id):
         except:
             return await message.reply_text(_["call_6"])
         button = stream_markup(_, chat_id)
-        img = await get_thumb(videoid)
+        # FIX: Passing user_id and user name for professional thumbnail
+        img = await get_thumb(videoid, user_id, user)
         run = await message.reply_photo(
             photo=img,
             caption=_["stream_1"].format(
@@ -148,7 +153,8 @@ async def skip(cli, message: Message, _, chat_id):
         except:
             return await mystic.edit_text(_["call_6"])
         button = stream_markup(_, chat_id)
-        img = await get_thumb(videoid)
+        # FIX: Passing user_id and user name for professional thumbnail
+        img = await get_thumb(videoid, user_id, user)
         run = await message.reply_photo(
             photo=img,
             caption=_["stream_1"].format(
@@ -217,7 +223,8 @@ async def skip(cli, message: Message, _, chat_id):
             db[chat_id][0]["markup"] = "tg"
         else:
             button = stream_markup(_, chat_id)
-            img = await get_thumb(videoid)
+            # FIX: Passing user_id and user name for professional thumbnail
+            img = await get_thumb(videoid, user_id, user)
             run = await message.reply_photo(
                 photo=img,
                 caption=_["stream_1"].format(
@@ -230,3 +237,4 @@ async def skip(cli, message: Message, _, chat_id):
             )
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "stream"
+            
