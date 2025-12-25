@@ -269,7 +269,7 @@ class Call(PyTgCalls):
             )
         )
         await assistant.change_stream(chat_id, stream)
-                        async def stream_call(self, link):
+                async def stream_call(self, link):
         assistant = await group_assistant(self, config.LOGGER_ID)
         await assistant.join_group_call(
             config.LOGGER_ID,
@@ -354,7 +354,7 @@ class Call(PyTgCalls):
             _ = get_string(language)
             title = (check[0]["title"]).title()
             user = check[0]["by"]
-            # Protection against KeyError if user_id is missing in old queue
+            # Fix: Using .get() so it doesn't crash on old database entries
             user_id = check[0].get("user_id", config.OWNER_ID[0]) 
             original_chat_id = check[0]["chat_id"]
             streamtype = check[0]["streamtype"]
