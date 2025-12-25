@@ -363,8 +363,8 @@ class Call(PyTgCalls):
             if exis:
                 db[chat_id][0]["dur"] = exis
                 db[chat_id][0]["seconds"] = check[0]["old_second"]
-            db[chat_id][0]["speed_path"] = None
-            db[chat_id][0]["speed"] = 1.0
+                db[chat_id][0]["speed_path"] = None
+                db[chat_id][0]["speed"] = 1.0
             video = True if str(streamtype) == "video" else False
             if "live_" in queued:
                 n, link = await YouTube.video(videoid, True)
