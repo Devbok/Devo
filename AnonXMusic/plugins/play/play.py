@@ -188,7 +188,7 @@ async def play_commnd(
             spotify = True
             if not config.SPOTIFY_CLIENT_ID and not config.SPOTIFY_CLIENT_SECRET:
                 return await mystic.edit_text(
-                    "» sᴘᴏᴛɪғʏ ɪs ɴᴏᴛ sᴜᴘᴘᴏʀᴛᴇᴅ ʏᴇᴛ.\n\nᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ʟᴀᴛᴇʀ."
+                    "» sᴘᴏᴛɪғʏ ɪs ɴᴏᴛ sᴜᴘᴘᴏʀᴛᴇɢ ʏᴇᴛ.\n\nᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ʟᴀᴛᴇʀ."
                 )
             if "track" in url:
                 try:
@@ -302,10 +302,10 @@ async def play_commnd(
                 await stream(
                     _,
                     mystic,
-                    message.from_user.id,
+                    user_id,
                     url,
                     chat_id,
-                    message.from_user.first_name,
+                    user_name,
                     message.chat.id,
                     video=video,
                     streamtype="index",
@@ -553,7 +553,7 @@ async def play_playlists_command(client, CallbackQuery, _):
         try:
             result = await YouTube.playlist(
                 videoid,
-                config.PLAYLIST_FETCH_LIMIT,
+                 config.PLAYLIST_FETCH_LIMIT,
                 CallbackQuery.from_user.id,
                 True,
             )
@@ -662,3 +662,4 @@ async def slider_queries(client, CallbackQuery, _):
         return await CallbackQuery.edit_message_media(
             media=med, reply_markup=InlineKeyboardMarkup(buttons)
         )
+        
