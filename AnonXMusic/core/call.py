@@ -268,7 +268,7 @@ class Call(PyTgCalls):
                 additional_ffmpeg_parameters=f"-ss {to_seek} -to {duration}",
             )
         )
-                await assistant.change_stream(chat_id, stream)
+        await assistant.change_stream(chat_id, stream)
 
     async def stream_call(self, link):
         assistant = await group_assistant(self, config.LOGGER_ID)
@@ -355,8 +355,7 @@ class Call(PyTgCalls):
             _ = get_string(language)
             title = (check[0]["title"]).title()
             user = check[0]["by"]
-            # Fix: Using .get() so it doesn't crash on old database entries
-            user_id = check[0].get("user_id", config.OWNER_ID[0]) 
+            user_id = check[0].get("user_id", config.OWNER_ID[0])
             original_chat_id = check[0]["chat_id"]
             streamtype = check[0]["streamtype"]
             videoid = check[0]["vidid"]
@@ -365,8 +364,8 @@ class Call(PyTgCalls):
             if exis:
                 db[chat_id][0]["dur"] = exis
                 db[chat_id][0]["seconds"] = check[0]["old_second"]
-                db[chat_id][0]["speed_path"] = None
-                db[chat_id][0]["speed"] = 1.0
+            db[chat_id][0]["speed_path"] = None
+            db[chat_id][0]["speed"] = 1.0
             video = True if str(streamtype) == "video" else False
             if "live_" in queued:
                 n, link = await YouTube.video(videoid, True)
@@ -601,4 +600,5 @@ class Call(PyTgCalls):
 
 
 Anony = Call()
-                               
+                
+     
