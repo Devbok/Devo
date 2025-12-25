@@ -269,7 +269,7 @@ class Call(PyTgCalls):
             )
         )
         await assistant.change_stream(chat_id, stream)
-            async def stream_call(self, link):
+                        async def stream_call(self, link):
         assistant = await group_assistant(self, config.LOGGER_ID)
         await assistant.join_group_call(
             config.LOGGER_ID,
@@ -354,7 +354,8 @@ class Call(PyTgCalls):
             _ = get_string(language)
             title = (check[0]["title"]).title()
             user = check[0]["by"]
-            user_id = check[0]["user_id"] # FIX: user_id extracted for thumb
+            # Protection against KeyError if user_id is missing in old queue
+            user_id = check[0].get("user_id", config.OWNER_ID[0]) 
             original_chat_id = check[0]["chat_id"]
             streamtype = check[0]["streamtype"]
             videoid = check[0]["vidid"]
@@ -391,7 +392,6 @@ class Call(PyTgCalls):
                         original_chat_id,
                         text=_["call_6"],
                     )
-                # FIX: Professional thumb with requested user data
                 img = await get_thumb(videoid, user_id, user)
                 button = stream_markup(_, chat_id)
                 run = await app.send_photo(
@@ -438,7 +438,6 @@ class Call(PyTgCalls):
                         original_chat_id,
                         text=_["call_6"],
                     )
-                # FIX: Professional thumb for video files
                 img = await get_thumb(videoid, user_id, user)
                 button = stream_markup(_, chat_id)
                 await mystic.delete()
@@ -527,7 +526,6 @@ class Call(PyTgCalls):
                     db[chat_id][0]["mystic"] = run
                     db[chat_id][0]["markup"] = "tg"
                 else:
-                    # FIX: Auto-next track thumb fix
                     img = await get_thumb(videoid, user_id, user)
                     button = stream_markup(_, chat_id)
                     run = await app.send_photo(
@@ -602,4 +600,4 @@ class Call(PyTgCalls):
 
 
 Anony = Call()
-        
+                               
